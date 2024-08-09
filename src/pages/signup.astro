@@ -2,14 +2,17 @@
 import Layout from "../layouts/Layout.astro";
 import Main from "../components/Main";
 import SignIn from "../components/SignIn";
-import { configureFreestyle, useCloud, useRequest } from "freestyle-sh";
+import { useCloud } from "freestyle-sh";
 import { UserManager } from "../cloudstate/auth";
-import cookie from "cookie";
-const userManager = useCloud<typeof UserManager>(UserManager.id);
+import SignUp from "../components/SignUp";
 
-const user = await userManager.getUserFromSession(
-  Astro.request.headers.get("cookie")
-);
+const userManager = useCloud<typeof UserManager>(UserManager.id);
+const session = await userManager
+  .getUserFromSession(Astro.request.headers.get("cookie"))
+  .then((session) => session);
+import { configureFreestyle } from "freestyle-sh";
+
+import cookie from "cookie";
 
 configureFreestyle({
   createHeaders: () => Astro.request.headers,
@@ -25,13 +28,13 @@ configureFreestyle({
     `freestyle-session-id=${sessionId}; Path=/; HttpOnly; SameSite=Lax`
   );
 }
-console.log(user);
-if (!user) {
-  return Astro.redirect("/signin");
+if (session) {
+  return Astro.redirect("/");
 }
 ---
 
+{session}
 <Layout title="Freestyle.sh Project">
-  <!-- <SignIn client:load /> -->
-  <Main client:load user={user} />
+  <SignUp client:load />
+  <!-- <Main client:load/> -->
 </Layout>

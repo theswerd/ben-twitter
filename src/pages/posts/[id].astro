@@ -1,0 +1,47 @@
+---
+import { useCloud } from "freestyle-sh";
+import PostPage from "../../components/PostPage";
+import { FeedItem } from "../../cloudstate/feed";
+import { UserManager } from "../../cloudstate/auth";
+import Layout from "../../layouts/Layout.astro";
+
+import { configureFreestyle } from "freestyle-sh";
+
+import cookie from "cookie";
+
+configureFreestyle({
+  createHeaders: () => Astro.request.headers,
+});
+
+{
+  // TODO: remove this once we have a better way to handle sessions
+  const parsedCookies = cookie.parse(Astro.request.headers.get("cookie") || "");
+  const sessionId =
+    parsedCookies["freestyle-session-id"] || crypto.randomUUID();
+  Astro.response.headers.set(
+    "set-cookie",
+    `freestyle-session-id=${sessionId}; Path=/; HttpOnly; SameSite=Lax`
+  );
+}
+const { id } = Astro.params;
+const post = useCloud<typeof FeedItem>(id!);
+
+const userManager = useCloud<typeof UserManager>(UserManager.id);
+
+const user = await userManager.getUserFromSession(
+  Astro.request.headers.get("cookie")
+);
+if (!user) {
+  return Astro.redirect("/signin");
+}
+
+if (!post) {
+  return Astro.redirect("/");
+}
+
+const postData = await post.info();
+---
+
+<Layout title="Freestyle.sh Project">
+  <PostPage client:load post={postData} user={user!} />
+</Layout>

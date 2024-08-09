@@ -1,9 +1,13 @@
 ---
+import { useCloud } from 'freestyle-sh';
+import { UserManager } from '../cloudstate/auth';
+
 interface Props {
   title: string;
 }
+const userManager = useCloud<typeof UserManager>(UserManager.id);
+  
 
-const { title } = Astro.props;
 ---
 
 <!doctype html>
@@ -14,7 +18,7 @@ const { title } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
+    <!-- <title>{title}</title> -->
   </head>
   <body>
     <slot />
